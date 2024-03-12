@@ -10,7 +10,10 @@ def canUnlockAll(boxes):
     for key_to_check in range(1, len(boxes) - 1):
         unlocked = False
         for box_index in range(len(boxes)):
-            unlocked = key_to_check in boxes[box_index] and key_to_check != box_index
+            unlocked = (
+                key_to_check in boxes[box_index] and
+                key_to_check != box_index
+            )
             if unlocked:
                 break
         if not unlocked:
