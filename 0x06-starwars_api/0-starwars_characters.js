@@ -46,18 +46,3 @@ async function fetchCharacters(movieId) {
         console.error('Error:', error);
     }
 }
-
-// Main function
-function main() {
-    const movieId = process.argv[2];
-    
-    if (!movieId || isNaN(movieId)) {
-        console.error('Usage: ./0-starwars_characters.js <Movie ID>');
-        process.exit(1);
-    }
-    
-    fetchCharacters(movieId);
-}
-
-// Call main function
-main();
