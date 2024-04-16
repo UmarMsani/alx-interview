@@ -1,26 +1,55 @@
 #!/usr/bin/node
 
 const request = require('request');
-const API_URL = 'https://swapi-api.hbtn.io/api';
 
-if (process.argv.length > 2) {
-  request(`${API_URL}/films/${process.argv[2]}/`, (err, _, body) => {
-    if (err) {
-      console.log(err);
-    }
-    const charactersURL = JSON.parse(body).characters;
-    const charactersName = charactersURL.map(
-      url => new Promise((resolve, reject) => {
-        request(url, (promiseErr, __, charactersReqBody) => {
-          if (promiseErr) {
-            reject(promiseErr);
-          }
-          resolve(JSON.parse(charactersReqBody).name);
+function fetchCharacterData(characterUrl) {
+    return new Promise((resolve, reject) => {
+        request(characterUrl, (error, response, body) => {
+            if (error || response.statusCode !== 200) {
+                reject(error || `API request failed with status code ${response.statusCode}`);
+                return;
+            }
+            
+            const characterData = JSON.parse(body);
+            resolve(characterData.name);
         });
-      }));
-
-    Promise.all(charactersName)
-      .then(names => console.log(names.join('\n')))
-      .catch(allErr => console.log(allErr));
-  });
+    });
 }
+
+async function fetchCharacters(movieId) {
+    const apiUrl = `https://swapi.dev/api/films/${movieId}/`;
+    
+    try {
+        const filmDataResponse = await new Promise((resolve, reject) => {
+            request(apiUrl, (error, response, body) => {
+                if (error || response.statusCode !== 200) {
+                    reject(error || `API request failed with status code ${response.statusCode}`);
+                    return;
+                }
+                resolve(body);
+            });
+        });
+
+        const filmData = JSON.parse(filmDataResponse);
+        const characters = filmData.characters;
+
+        const characterNames = await Promise.all(characters.map(fetchCharacterData));
+
+        characterNames.forEach(name => console.log(name));
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+function main() {
+    const movieId = process.argv[2];
+    
+    if (!movieId || isNaN(movieId)) {
+        console.error('Usage: ./0-starwars_characters.js <Movie ID>');
+        process.exit(1);
+    }
+    
+    fetchCharacters(movieId);
+}
+
+main();
