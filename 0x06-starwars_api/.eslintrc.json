@@ -1,0 +1,15 @@
+{
+    "extends": [
+        "standard",
+        "airbnb-base"
+    ],
+    "plugins": [
+        "standard",
+        "promise"
+    ],
+    "rules": {
+        "semi": ["error", "always"], // Ensure semicolons are used
+        "quotes": ["error", "single"], // Use single quotes
+        "no-var": "error" // Disallow usage of var
+    }
+}

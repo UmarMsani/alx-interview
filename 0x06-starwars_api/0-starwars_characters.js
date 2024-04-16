@@ -7,7 +7,8 @@ function fetchCharacterData(characterUrl) {
     return new Promise((resolve, reject) => {
         request(characterUrl, (error, response, body) => {
             if (error || response.statusCode !== 200) {
-                reject(error || `API request failed with status code ${response.statusCode}`);
+                reject(error ? error : 
+       			`API request failed with status code ${response.statusCode}`);
                 return;
             }
             
@@ -25,7 +26,8 @@ async function fetchCharacters(movieId) {
         const filmDataResponse = await new Promise((resolve, reject) => {
             request(apiUrl, (error, response, body) => {
                 if (error || response.statusCode !== 200) {
-                    reject(error || `API request failed with status code ${response.statusCode}`);
+                    reject(error ? error : 
+       			`API request failed with status code ${response.statusCode}`);
                     return;
                 }
                 resolve(body);
