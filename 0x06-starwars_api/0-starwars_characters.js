@@ -1,48 +1,31 @@
 #!/usr/bin/node
 
 const request = require('request');
+const API_URL = 'https://swapi-api.hbtn.io/api';
 
-// Function to fetch character data
-function fetchCharacterData(characterUrl) {
-    return new Promise((resolve, reject) => {
-        request(characterUrl, (error, response, body) => {
-            if (error || response.statusCode !== 200) {
-                reject(error ? error : 
-       			`API request failed with status code ${response.statusCode}`);
-                return;
-            }
-            
-            const characterData = JSON.parse(body);
-            resolve(characterData.name);
-        });
-    });
-}
-
-// Function to fetch characters of a Star Wars movie
-async function fetchCharacters(movieId) {
-    const apiUrl = `https://swapi.dev/api/films/${movieId}/`;
-    
-    try {
-        const filmDataResponse = await new Promise((resolve, reject) => {
-            request(apiUrl, (error, response, body) => {
-                if (error || response.statusCode !== 200) {
-                    reject(error ? error : 
-       			`API request failed with status code ${response.statusCode}`);
-                    return;
-                }
-                resolve(body);
-            });
-        });
-
-        const filmData = JSON.parse(filmDataResponse);
-        const characters = filmData.characters;
-
-        // Fetch all character names concurrently
-        const characterNames = await Promise.all(characters.map(fetchCharacterData));
-
-        // Print character names
-        characterNames.forEach(name => console.log(name));
-    } catch (error) {
-        console.error('Error:', error);
+// Check if a movie ID is provided as a command-line argument
+if (process.argv.length > 2) {
+  request(`${API_URL}/films/${process.argv[2]}/`, (err, _, body) => {
+    if (err) {
+      console.log(err);
     }
+	
+    // Extract URLs of characters appearing in the movie
+    const charactersURL = JSON.parse(body).characters;
+     // Map character URLs to promises fetching character names
+    const charactersName = charactersURL.map(
+      url => new Promise((resolve, reject) => {
+        request(url, (promiseErr, __, charactersReqBody) => {
+          if (promiseErr) {
+            reject(promiseErr);
+          }
+	   // Resolve promise with character name
+          resolve(JSON.parse(charactersReqBody).name);
+        });
+      }));
+
+    Promise.all(charactersName)
+      .then(names => console.log(names.join('\n')))
+      .catch(allErr => console.log(allErr));
+  });
 }
