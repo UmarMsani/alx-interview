@@ -2,53 +2,30 @@
 
 const request = require('request');
 
+const API_URL = 'https://swapi-api.hbtn.io/api';
 
-function fetchCharacters(movieId) {
-    const apiUrl = `https://swapi.dev/api/films/${movieId}/`;
-    
-    request(apiUrl, (error, response, body) => {
-        if (error) {
-            console.error('Error:', error);
-            return;
-        }
-        
-        if (response.statusCode !== 200) {
-            console.error('API request failed with status code:', response.statusCode);
-            return;
-        }
-        
-        const filmData = JSON.parse(body);
-        const characters = filmData.characters;
-        
-        characters.forEach(characterUrl => {
-            request(characterUrl, (error, response, body) => {
-                if (error) {
-                    console.error('Error:', error);
-                    return;
-                }
-                
-                if (response.statusCode !== 200) {
-                    console.error('API request failed with status code:', response.statusCode);
-                    return;
-                }
-                
-                const characterData = JSON.parse(body);
-                console.log(characterData.name);
-            });
-        });
-    });
-}
-
-
-function main() {
-    const movieId = process.argv[2];
-    
-    if (!movieId || isNaN(movieId)) {
-        console.error('Usage: node script.js <Movie ID>');
-        process.exit(1);
+if (process.argv.length > 2) {
+  request(`${API_URL}/films/${process.argv[2]}/`, (err, _, body) => {
+    if (err) {
+      console.log(err);
     }
-    
-    fetchCharacters(movieId);
-}
 
-main();
+    const charactersURL = JSON.parse(body).characters;
+
+    const charactersName = charactersURL.map(
+      url => new Promise((resolve, reject) => {
+        request(url, (promiseErr, __, charactersReqBody) => {
+          if (promiseErr) {
+            reject(promiseErr);
+          }
+
+          resolve(JSON.parse(charactersReqBody).name);
+        });
+      }));
+
+    Promise.all(charactersName)
+      .then(names => console.log(names.join('\n')))
+      .catch(allErr => console.log(allErr));
+  });
+
+}
